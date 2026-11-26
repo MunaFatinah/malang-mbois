@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Malang Mbois</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script></head>
+<body>
+<aside id="side"><div class="brand">MALANG MBOIS<small>Smart Traffic Monitoring</small></div><nav id="nav"></nav><a class="out" href="/logout">Keluar</a></aside>
+<div class="main"><header><button id="burger">&#9776;</button><b id="ttl"></b><span class="who">{{ u.nama }} <em>{{ u.role|capitalize }}</em></span></header>
+<main>
+<section id="v-ringkasan"><div class="cards" id="cards"></div>
+<div class="two"><div class="card"><h3>Peta kemacetan</h3><div id="map"></div><small id="mapnote"></small></div>
+<div class="card"><h3>Kondisi lalu lintas</h3><canvas id="c-kondisi"></canvas></div></div></section>
+{% if u.role == 'warga' %}<section id="v-lapor" hidden><form id="frm" class="card form"><h3 class="w">Laporkan kejadian</h3>
+<label>Lokasi kejadian<input name="lokasi" required maxlength="120"></label>
+<label>Kelurahan<select name="kelurahan">{% for k in kel %}<option>{{ k }}</option>{% endfor %}</select></label>
+<label>Jenis kejadian<select name="jenis">{% for j in jenis %}<option>{{ j }}</option>{% endfor %}</select></label>
+<label>Tingkat kemacetan<select name="tingkat">{% for t in tingkat %}<option>{{ t }}</option>{% endfor %}</select></label>
+<label class="w">Deskripsi<textarea name="deskripsi" rows="3" required></textarea></label>
+<label class="w">Foto bukti (opsional)<input type="file" name="foto" accept="image/*"></label>
+<div class="w"><small>Klik peta untuk menandai titik kejadian (opsional; jika tidak, dipakai pusat kelurahan).</small><div id="pick"></div></div>
+<input type="hidden" name="lat"><input type="hidden" name="lng"><button class="w">Kirim Laporan</button></form></section>{% endif %}
+<section id="v-laporan" hidden><div class="card"><div class="bar"><input id="q" placeholder="Cari lokasi atau deskripsi">
+<select id="fs"><option value="">Semua status</option>{% for s in status %}<option>{{ s }}</option>{% endfor %}</select>
+<select id="fk"><option value="">Semua kelurahan</option>{% for k in kel %}<option>{{ k }}</option>{% endfor %}</select></div>
+<div class="ov"><table id="tbl"></table></div></div></section>
+{% if u.role == 'dishub' %}<section id="v-analisis" hidden><div class="grid2">
+<div class="card"><h3>Laporan per hari</h3><canvas id="c-harian"></canvas></div><div class="card"><h3>Laporan per kelurahan</h3><canvas id="c-kel"></canvas></div>
+<div class="card"><h3>Jenis permasalahan</h3><canvas id="c-jenis"></canvas></div><div class="card"><h3>Lokasi paling sering dilaporkan</h3><canvas id="c-lokasi"></canvas></div></div>
+<div class="card"><div class="bar"><h3>Hasil survei (<span id="nsv"></span> responden)</h3>
+<select id="sk"><option value="">Semua kelurahan</option>{% for k in kel %}<option>{{ k }}</option>{% endfor %}</select></div>
+<div class="grid2"><div><h4>Jam macet terparah (% responden)</h4><canvas id="c-jam"></canvas></div><div><h4>Penyebab utama (% responden)</h4><canvas id="c-sebab"></canvas></div></div></div></section>{% endif %}
+</main></div>
+<dialog id="dlg"></dialog><div id="toast"></div>
+<script>const CFG={{ cfg|tojson }};</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script></body></html>

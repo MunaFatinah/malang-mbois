@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masuk | Malang Mbois</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="login">
+<section class="hero"><div><h1>MALANG MBOIS</h1><p class="tag">Smart Traffic Monitoring &amp; Reporting System</p>
+<p>Pantau kondisi lalu lintas, laporkan kemacetan, dan koordinasikan penanganannya di Kecamatan Lowokwaru, Kota Malang.</p></div></section>
+<section class="box"><form method="post"><h2>Masuk</h2>{% if err %}<div class="err">{{ err }}</div>{% endif %}
+<label>Username<input name="username" id="u" required autofocus autocomplete="username"></label>
+<label>Password<input name="password" id="p" type="password" required autocomplete="current-password"></label>
+<button>Masuk</button><small>Akun demo (klik untuk mengisi):</small>
+<div class="chips">{% for a in ['warga','dishub','polsek'] %}<button type="button" class="chip" data-u="{{ a }}">{{ a }}</button>{% endfor %}</div></form></section>
+<script>document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{u.value=b.dataset.u;p.value=b.dataset.u+"123"})</script></body></html>
