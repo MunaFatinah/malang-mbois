@@ -18,8 +18,9 @@
 <label>Tingkat kemacetan<select name="tingkat">{% for t in tingkat %}<option>{{ t }}</option>{% endfor %}</select></label>
 <label class="w">Deskripsi<textarea name="deskripsi" rows="3" required></textarea></label>
 <label class="w">Foto bukti (opsional)<input type="file" name="foto" accept="image/*"></label>
-<div class="w"><small>Klik peta untuk menandai titik kejadian (opsional; jika tidak, dipakai pusat kelurahan).</small><div id="pick"></div></div>
-<input type="hidden" name="lat"><input type="hidden" name="lng"><button class="w">Kirim Laporan</button></form></section>{% endif %}
+<div class="w"><div class="row"><button type="button" id="myloc" class="sec">Gunakan lokasi saya</button><small>atau klik / seret pin di peta untuk menandai titik kejadian (wajib).</small></div><div id="pick"></div></div>
+<label>Latitude<input name="lat" readonly placeholder="otomatis dari pin"></label><label>Longitude<input name="lng" readonly placeholder="otomatis dari pin"></label>
+<button class="w">Kirim Laporan</button></form></section>{% endif %}
 <section id="v-laporan" hidden><div class="card"><div class="bar"><input id="q" placeholder="Cari lokasi atau deskripsi">
 <select id="fs"><option value="">Semua status</option>{% for s in status %}<option>{{ s }}</option>{% endfor %}</select>
 <select id="fk"><option value="">Semua kelurahan</option>{% for k in kel %}<option>{{ k }}</option>{% endfor %}</select></div>
