@@ -23,7 +23,7 @@ ACT = {
     "verifikasi": ("dishub", "Diverifikasi", ["Dilaporkan"], False, "Laporan diverifikasi"),
     "pantau": ("dishub", "Dipantau", ["Dilaporkan", "Diverifikasi"], False, "Ditandai dipantau"),
     "instruksi": ("dishub", "Dipantau", ["Diverifikasi", "Dipantau"], True, "Instruksi ke Polsek"),
-    "tangani": ("polsek", "Dalam Penanganan", ["Dipantau"], True, "Mulai penanganan"),
+    "tangani": ("polsek", "Dalam Penanganan", ["Diverifikasi", "Dipantau"], True, "Mulai penanganan"),
     "selesai": ("polsek", "Selesai", ["Dalam Penanganan"], True, "Penanganan selesai"),
 }
 
@@ -137,7 +137,7 @@ def reports(u):
     if u["role"] == "warga":
         w, a = " WHERE r.user_id=?", (u["id"],)
     elif u["role"] == "polsek":
-        w = " WHERE r.instruksi!=''"
+        w = " WHERE r.status IN ('Diverifikasi','Dipantau','Dalam Penanganan','Selesai')"  # laporan diteruskan Dishub
     rows = [dict(r) for r in db().execute("SELECT r.*, u.nama pelapor FROM reports r JOIN users u ON u.id=r.user_id" + w + " ORDER BY r.id DESC", a)]
     for r in rows:
         r["riwayat"] = [dict(h) for h in db().execute("SELECT * FROM history WHERE report_id=? ORDER BY id", (r["id"],))]
@@ -157,8 +157,10 @@ def buat(u):
         return jsonify(error=str(e)), 400
     try:
         lat, lng = float(f["lat"]), float(f["lng"])
-    except (KeyError, ValueError):  # tidak menandai peta: pakai pusat kelurahan + sedikit geseran agar marker tidak menumpuk
-        lat, lng = KEL[kel][0] + random.uniform(-.0008, .0008), KEL[kel][1] + random.uniform(-.0008, .0008)
+    except (KeyError, ValueError):
+        return jsonify(error="Tandai titik lokasi di peta (atau pakai tombol lokasi saya)."), 400
+    if not (-8.2 < lat < -7.8 and 112.45 < lng < 112.85):
+        return jsonify(error="Titik berada di luar wilayah Malang."), 400
     ts = now()
     rid = db().execute("INSERT INTO reports(user_id,lokasi,kelurahan,jenis,tingkat,deskripsi,foto,lat,lng,status,dibuat,diubah) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                        (u["id"], lok, kel, jenis, tk, desk, foto, lat, lng, "Dilaporkan", ts, ts)).lastrowid
@@ -174,7 +176,7 @@ def aksi_laporan(u, rid, aksi):
     r = db().execute("SELECT * FROM reports WHERE id=?", (rid,)).fetchone()
     if not a or not r or a[0] != u["role"]:
         return jsonify(error="Aksi tidak valid untuk peran Anda."), 403
-    if r["status"] not in a[2] or (u["role"] == "polsek" and not r["instruksi"]):
+    if r["status"] not in a[2]:
         return jsonify(error="Status laporan (%s) tidak sesuai untuk aksi ini." % r["status"]), 409
     cat = request.form.get("catatan", "").strip()
     if a[3] and not cat:
@@ -203,11 +205,11 @@ def stats(u):
     d = db()
     n = lambda w="1": d.execute("SELECT COUNT(*) FROM reports WHERE " + w).fetchone()[0]
     grp = lambda col: {r[0]: r[1] for r in d.execute("SELECT %s, COUNT(*) FROM reports GROUP BY 1" % col)}
-    ins = "instruksi!=''"
+    ins = "status IN ('Diverifikasi','Dipantau','Dalam Penanganan','Selesai')"
     return jsonify(
         total=n(), titik=d.execute("SELECT COUNT(DISTINCT lokasi) FROM reports").fetchone()[0], belum=n("status='Dilaporkan'"),
         proses=n("status IN ('Dipantau','Dalam Penanganan')"), selesai=n("status='Selesai'"),
-        polsek=dict(total=n(ins), belum=n(ins + " AND status='Dipantau'"), proses=n(ins + " AND status='Dalam Penanganan'"), selesai=n(ins + " AND status='Selesai'")),
+        polsek=dict(total=n(ins), belum=n("status IN ('Diverifikasi','Dipantau')"), proses=n(ins + " AND status='Dalam Penanganan'"), selesai=n(ins + " AND status='Selesai'")),
         kondisi=grp("tingkat"), kelurahan=grp("kelurahan"), jenis=grp("jenis"), harian=grp("substr(dibuat,1,10)"),
         lokasi=[[r[0], r[1]] for r in d.execute("SELECT lokasi, COUNT(*) c FROM reports GROUP BY lokasi ORDER BY c DESC LIMIT 5")])
 
